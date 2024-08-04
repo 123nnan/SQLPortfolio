@@ -122,3 +122,24 @@ Join PortfolioProject..CovidVaccines vac
 	on dea.location = vac.location
 	and dea.date = vac.date
 where dea.continent is not null and vac.new_vaccinations is not null
+
+Create Table PortfolioProject..PopulationVaccinated (
+	Continent varchar(255),
+	Location varchar(255),
+	Date datetime,
+	Population numeric,
+	New_vaccination numeric,
+	RollingPeopleVaccinated bigint
+	)
+
+insert into PortfolioProject..PopulationVaccinated
+Select dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations, SUM(Convert(float, vac.new_vaccinations)) OVER (Partition by dea.location Order by dea.location, dea.date) as RollingPeopleVaccinated
+from PortfolioProject..CovidDeaths dea
+Join PortfolioProject..CovidVaccines vac
+	on dea.location = vac.location
+	and dea.date = vac.date
+where dea.continent is not null and vac.new_vaccinations is not null
+
+Create View PercentPopulationVaccinated as
+Select *, (RollingPeopleVaccinated/Population)*100 as VaccinatedPercentage
+From PortfolioProject..PopulationVaccinated
